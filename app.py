@@ -19,6 +19,7 @@ import streamlit as st
 
 # ---------- 表示テキスト（ここを書き換えれば文言変更できる） ----------
 APP_TITLE = "Document AI Engine — α ver."
+APP_SUBTITLE = "ECR → Manual Highlight Automation"
 GATE_CAPTION = "Internal access — enter the access code provided to you."
 GATE_FOOTER = "FLE internal use only. Do not share this URL or code."
 WELCOME_MSG = "Attach the manual PDF and the ECR, then ask where to change."
@@ -59,17 +60,46 @@ def dify_upload(uploaded_file) -> str:
     return r.json()["id"]
 
 
+def get_manual_input_spec() -> tuple[str, bool]:
+    """Difyアプリの入力定義を取得し、(変数名, リスト型か) を返す。
+    単一ファイル型/ファイルリスト型のどちらでも正しいpayloadを組むための自動検出。"""
+    if "manual_spec" in ss:
+        return ss.manual_spec
+    r = requests.get(
+        f"{DIFY_BASE_URL}/parameters",
+        headers={"Authorization": f"Bearer {DIFY_API_KEY}"},
+        params={"user": ss.user_id},
+        timeout=30,
+    )
+    r.raise_for_status()
+    forms = r.json().get("user_input_form", [])
+    file_vars = []  # (variable, is_list)
+    for item in forms:
+        for kind, conf in item.items():
+            if kind in ("file", "file-list"):
+                file_vars.append((conf.get("variable", ""), kind == "file-list"))
+    if not file_vars:
+        raise RuntimeError(
+            "No file-type input variable found in the Dify app. "
+            f"Available inputs: {[list(i.keys())[0] + ':' + list(i.values())[0].get('variable','?') for i in forms]}"
+        )
+    # manual_pdf を優先、無ければ最初のファイル型変数
+    spec = next((v for v in file_vars if v[0] == "manual_pdf"), file_vars[0])
+    ss.manual_spec = spec
+    return spec
+
+
 def dify_chat_stream(query: str, manual_file_id: str, ecr_file_id: str | None):
     """chat-messages(SSE)を叩き、(答えテキストのgenerator, 添付ファイルlist) を返す。
     添付ファイルlistはストリーム消費後に埋まる点に注意。"""
+    var_name, is_list = get_manual_input_spec()
+    manual_obj = {
+        "type": "document",
+        "transfer_method": "local_file",
+        "upload_file_id": manual_file_id,
+    }
     payload = {
-        "inputs": {
-            "manual_pdf": {
-                "type": "document",
-                "transfer_method": "local_file",
-                "upload_file_id": manual_file_id,
-            }
-        },
+        "inputs": {var_name: [manual_obj] if is_list else manual_obj},
         "query": query,
         "response_mode": "streaming",
         "conversation_id": ss.conversation_id,
@@ -182,6 +212,7 @@ def render_main():
         f"<h3 style='color:{TITLE_COLOR};margin-bottom:0;'>{APP_TITLE}</h3>",
         unsafe_allow_html=True,
     )
+    st.markdown(f"#### {APP_SUBTITLE}")
     st.divider()
     st.info(WELCOME_MSG)
 
