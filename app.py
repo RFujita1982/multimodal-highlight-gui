@@ -19,7 +19,6 @@ import streamlit as st
 
 # ---------- 表示テキスト（ここを書き換えれば文言変更できる） ----------
 APP_TITLE = "Document AI Engine — α ver."
-APP_SUBTITLE = "ECR → Manual Highlight Automation"
 GATE_CAPTION = "Internal access — enter the access code provided to you."
 GATE_FOOTER = "FLE internal use only. Do not share this URL or code."
 WELCOME_MSG = "Attach the manual PDF and the ECR, then ask where to change."
