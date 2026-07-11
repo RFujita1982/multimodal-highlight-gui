@@ -182,7 +182,6 @@ def render_main():
         f"<h3 style='color:{TITLE_COLOR};margin-bottom:0;'>{APP_TITLE}</h3>",
         unsafe_allow_html=True,
     )
-    st.markdown(f"#### {APP_SUBTITLE}")
     st.divider()
     st.info(WELCOME_MSG)
 
