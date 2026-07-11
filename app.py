@@ -25,7 +25,7 @@ GATE_FOOTER = "FLE internal use only. Do not share this URL or code."
 WELCOME_MSG = "Attach the manual PDF and the ECR, then ask where to change."
 CHAT_PLACEHOLDER = "Ask about the manual… (e.g. Based on ECR, please tell me where to change)"
 TITLE_COLOR = "#C8102E"  # FLEロゴの赤に合わせる。好みで調整
-LOGO_PATH = "assets/fle_logo.jpeg"
+LOGO_PATH = "assets/fle_logo.jpg"
 
 DIFY_BASE_URL = st.secrets.get("DIFY_BASE_URL", "https://api.dify.ai/v1")
 DIFY_API_KEY = st.secrets["DIFY_API_KEY"]
